@@ -1,0 +1,14 @@
+*.vo
+*.vos
+*.vok
+*.glob
+*.v.d
+.*.aux
+_backup/
+*~
+.#*
+*.aux
+.DS_Store
+.lia*
+*.coq.d
+.vscode

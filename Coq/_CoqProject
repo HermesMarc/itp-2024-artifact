@@ -1,0 +1,13 @@
+
+-Q intrusive Intrusive
+-arg -w -arg -notation-overridden
+
+intrusive/Setup.v
+intrusive/Util.v
+
+intrusive/lists/seq.v
+intrusive/lists/cycle_single.v
+intrusive/lists/cycle_double.v
+intrusive/lists/deque.v
+
+intrusive/trees/bst.v
