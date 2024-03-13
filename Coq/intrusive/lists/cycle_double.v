@@ -243,7 +243,11 @@ Definition remove_1 : val :=
     destruct (list_nil_or_snoc L) as [->|(L'&p&->)]; first iSteps.
     rewrite rev_unit; simpl.
     iDestruct "Hc" as "[Hc1 Hl]".
-  Admitted.
+    rewrite rev_add1_snoc. iStep 12 as (v) "Hc1 Hl1".
+    rewrite -Cycle.pred_rotate app_comm_cons -Cycle.pred_rotate.
+    rewrite Loc.add_0. iStep 7.
+    rewrite Cycle.pred_rotate; iSteps.
+  Qed.
 
   Global Instance remove_1_spec_diaframe c l L :
   SPEC  {{ is_dcycle c (L ++ [l]) }}

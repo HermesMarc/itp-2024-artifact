@@ -20,12 +20,6 @@ Proof.
   apply tree.map_f_insert; now intros [][].
 Qed.
 
-(* Lemma map_fst_delete {A} k (a: A) (t: tree.t (nat * A)) :
-  tree.map fst (tree_delete k a t) =
-  tree.delete _ (λ x y, bool_decide (x < y)) k id (tree.map fst t).
-Proof.
-Admitted. *)
-
 Lemma tree_locate_ignore {k l Γ t} (p: loc) :
   tree_locate k l Γ t = tree_locate k p Γ t.
 Proof.

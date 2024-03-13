@@ -9,7 +9,6 @@ Section util.
 End util.
 
 
-
 (* ------------------ Tree and BST structures --------------------- *)
 Module tree.
 Section module.
