@@ -308,8 +308,8 @@ Section BST.
     intros H1 H2 t Ht H. apply H2 in Ht; split; [tauto|set_solver].
   Qed.
   
-  Context (Hp_false : forall x y, p x y = true -> p y x = true -> False)
-          (Hp_asym  : forall x y, p x y = false -> p y x = false -> x = y).
+  Context (Hp_asym : forall x y, p x y = true -> p y x = true -> False)
+          (Hp_antisym  : forall x y, p x y = false -> p y x = false -> x = y).
 
   Set Default Proof Using "Type*".
 
@@ -322,7 +322,7 @@ Section BST.
      in Γ |-*; simpl; intros Hctx.
     { intros [= <- <-]. split; first constructor. set_solver. }
     destruct (p k' k) eqn:Hp1, (p k k') eqn:Hp2.
-    - edestruct Hp_false; eauto.
+    - edestruct Hp_asym; eauto.
     - intros Hloc. edestruct IHr; eauto.
       eapply BST_ctx_compose; eauto.
       eapply BST_ctx_weakening_right.
@@ -339,7 +339,7 @@ Section BST.
       + intros y Hy.
         assert (y = k \/ y ∈ to_set l) as [|] by set_solver; subst; auto.
       + constructor; auto; [constructor|set_solver].
-    - assert (k' = k) as -> by now apply Hp_asym.
+    - assert (k' = k) as -> by now apply Hp_antisym.
       intros [= <- <-]. split; auto.
       now constructor.
   Qed.
@@ -363,7 +363,7 @@ Section BST.
     destruct t' as [|k' l r].
     - eapply BST_ctx_singelton; last eauto; set_solver.
     - apply locate_spec in Hloc as (H1 & H2 & H3).
-      assert (k' = k) as -> by now apply Hp_asym.
+      assert (k' = k) as -> by now apply Hp_antisym.
       rewrite H1; apply Hbst.
   Qed.
 

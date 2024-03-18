@@ -254,6 +254,7 @@ Definition option_loc_to_val (v: option loc) : val :=
   | Some l => SOMEV #l
   end.
 
+  
 (*  This spec shows that if insert encounters a node that already has [k]
     stored in it, it will replace that node with the new one. *)
 Lemma insert_spec (l new: loc) (k: nat) t :
