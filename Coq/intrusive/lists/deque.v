@@ -28,16 +28,16 @@ Definition pop_front : val :=
   λ: "l", if: DCycle.is_empty "l" then NONEV else
     let: "next" := DCycle.next "l" in
     let: "x" := !("next" +ₗ #2) in
-    DCycle.remove_0 "l";;
-    array_free "next" #3 ;;
+    let: "rem" := DCycle.remove_0 "l" in
+    array_free "rem" #3 ;;
     SOME "x".
 
 Definition pop_back : val :=
   λ: "l", if: DCycle.is_empty "l" then NONEV else
     let: "prev" := DCycle.prev "l" in
     let: "x" := !("prev" +ₗ #2) in
-    DCycle.remove_1 "l";;
-    array_free "prev" #3;;
+    let: "rem" := DCycle.remove_1 "l" in
+    array_free "rem" #3;;
     SOME "x".
 
 (* ------------------- Verificiation of the Specs ----------------- *)

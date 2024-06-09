@@ -88,13 +88,14 @@ Definition insert_1 : val :=
 Definition remove_0 : val :=
   λ: "pos",
     let: "2next" := next (next "pos") in
-    Cycle.remove ("pos"   +ₗ #0) ;;
-    Cycle.remove ("2next" +ₗ #1).
+    let: "l0" := Cycle.remove ("pos" +ₗ #0) in
+    Cycle.remove ("2next" +ₗ #1) ;;
+    "l0".
 
 Definition remove_1 : val :=
   λ: "pos",
     let: "2prev" := prev (prev "pos") in
-    Cycle.remove ("pos"   +ₗ #1) ;;
+    Cycle.remove ("pos"   +ₗ #1);;
     Cycle.remove ("2prev" +ₗ #0).
 
 (* ----------- Specs for dcyclic linked list operations ----------- *)
@@ -206,7 +207,7 @@ Definition remove_1 : val :=
   Lemma remove_0_spec c l L :
   {{{ is_dcycle c (l :: L) }}}
     remove_0 #c
-  {{{ v0 v1, RET #(); is_dcycle c L ∗ l ↦∗ [v0; v1] }}}.
+  {{{ v0 v1, RET #l; is_dcycle c L ∗ l ↦∗ [v0; v1] }}}.
   Proof.
     iStep 8 as (Φ) "HΦ Hc0 Hc1". iModIntro.
     wp_apply (next_spec with "[Hc0 Hc1]").
@@ -225,13 +226,13 @@ Definition remove_1 : val :=
   Global Instance remove_0_spec_diaframe c l L :
   SPEC  {{ is_dcycle c (l :: L) }}
           remove_0 #c
-        {{ v0 v1, RET #(); is_dcycle c L ∗ l ↦∗ [v0; v1] }}.
+        {{ v0 v1, RET #l; is_dcycle c L ∗ l ↦∗ [v0; v1] }}.
   Proof. iStep; iApply (remove_0_spec with "[-]"); iSteps. Qed.
 
   Lemma remove_1_spec c l L :
   {{{ is_dcycle c (L ++ [l]) }}}
     remove_1 #c
-  {{{ v0 v1, RET #(); is_dcycle c L ∗ l ↦∗ [v0; v1] }}}.
+  {{{ v0 v1, RET #l; is_dcycle c L ∗ l ↦∗ [v0; v1] }}}.
   Proof.
     iStep 8 as (Φ) "HΦ Hc0 Hc1". iModIntro.
     wp_apply (prev_spec with "[Hc0 Hc1]").
@@ -252,7 +253,7 @@ Definition remove_1 : val :=
   Global Instance remove_1_spec_diaframe c l L :
   SPEC  {{ is_dcycle c (L ++ [l]) }}
           remove_1 #c
-        {{ v0 v1, RET #(); is_dcycle c L ∗ l ↦∗ [v0; v1] }}.
+        {{ v0 v1, RET #l; is_dcycle c L ∗ l ↦∗ [v0; v1] }}.
   Proof. iStep; iApply (remove_1_spec with "[-]"); iSteps. Qed.
 
 End Dcycle.

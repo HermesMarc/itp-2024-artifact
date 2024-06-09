@@ -28,7 +28,8 @@ Section seq.
   Definition pop : val :=
     λ: "start",
         let: "rem" := ! "start" in
-        "start" <- ! "rem".
+        "start" <- ! "rem" ;;
+        "rem".
 
   Definition next : val :=
     λ: "start", ! "start".
@@ -75,7 +76,7 @@ Section seq.
   Lemma pop_spec {s e l: loc} (L: list loc) :
     {{{ is_seq s (l :: L) e }}}
       pop #s
-    {{{ v, RET #(); l ↦ v ∗ is_seq s L e }}}.
+    {{{ v, RET #l; l ↦ v ∗ is_seq s L e }}}.
   Proof. destruct L; iSteps. Qed.
 
   Lemma next_spec {s n e : loc} (L R: list loc) :

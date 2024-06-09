@@ -62,7 +62,7 @@ Implicit Types n : nat.
 Implicit Types v d : val.
 Implicit Types l : loc.
 
-Lemma get_pos_spec' n v ls:
+Lemma get_pos_spec n v ls:
   {{{ nodes v ls }}}
     get_pos #n v
   {{{ RET (from_option (λ l, SOMEV #l) NONEV (ls !! n)) ;
@@ -96,7 +96,7 @@ Proof.
     apply lookup_lt_Some in HD; lia.
 Qed.
 
-Lemma replace_at_spec' n v ds d :
+Lemma replace_at_spec n v ds d :
   {{{ is_list v ds }}}
     replace_at v #n d
   {{{ RET #(); is_list v (<[n := d]> ds) }}}.
@@ -104,7 +104,7 @@ Proof.
   iStep 2 as (Φ) "H". rewrite !is_list_equiv.
   iRevert "H". iSteps as "Hl Hld HΦ"; iModIntro.
   iDestruct (big_sepL2_length with "Hld") as %Hlen.
-  wp_apply (get_pos_spec' with "[$Hl]") as "Hnodes".
+  wp_apply (get_pos_spec with "[$Hl]") as "Hnodes".
   apply (parallel_lookup n) in Hlen as [(l&d'&Hl&Hd)|[Hl Hd]]; rewrite Hl.
   - iDestruct (big_sepL2_insert_acc with "Hld") as "[Hl1 Hld]"; [done..|].
     iSteps as "Hl1". iModIntro.
