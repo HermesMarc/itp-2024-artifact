@@ -1,5 +1,8 @@
 # Coq Mechanization Artifact
 
+[![DOI](https://zenodo.org/badge/771601216.svg)](https://zenodo.org/doi/10.5281/zenodo.11534019)
+
+
 Code artifact for the paper *"Modular Verification of Intrusive List and Tree Data Structures in Separation Logic"*.
 
 ## Compilation
