@@ -79,7 +79,7 @@ Definition is_Intrusive_Map (l: loc)(m: gmap nat loc) : iProp Σ :=
 (* Map that assigns a value to every key *)
 Definition is_Map (l: loc)(m: gmap nat val) : iProp Σ :=
   ∃ m', is_Intrusive_Map l m'
-∗ [∗ map] l ; v ∈ m' ; m, (l +ₗ 3) ↦ v.
+∗ [∗ map] l ; v ∈ m' ; m, (l +ₗ -1) ↦ v.
 
 Definition is_Set l (s: gset nat) : iProp Σ :=
   ∃ m, is_Intrusive_Map l m ∗ ⌜ dom m = s ⌝.

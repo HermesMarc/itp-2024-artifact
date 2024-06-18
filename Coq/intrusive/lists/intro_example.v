@@ -9,7 +9,7 @@ Fixpoint is_list (v: val) (ds: list val) : iProp Σ :=
   match ds with
   | []      =>  ⌜ v = NONEV ⌝
   | d :: ds =>  ∃ (l: loc), ⌜ v = SOMEV #l ⌝ ∗
-                ∃ (v': val), l ↦∗ [v'; d] ∗ is_list v' ds
+                ∃ (v': val), l ↦∗ [d; v'] ∗ is_list v' ds
   end.
 
 Fixpoint nodes (vs: val) (ls: list loc) : iProp Σ :=
@@ -19,23 +19,9 @@ Fixpoint nodes (vs: val) (ls: list loc) : iProp Σ :=
                 ∃ (v': val), l ↦ v' ∗ nodes v' ls
   end.
 
-Lemma is_list_equiv v ds :
-  is_list v ds ⊣⊢ ∃ (ls: list loc),
-    nodes v ls ∗ [∗ list] i ↦ l ; d ∈ ls ; ds, (l +ₗ 1) ↦ d.
-Proof.
-  induction ds as [|d ds IH] in v |-*; simpl.
-  { iSteps as (ls) "H1 H2". 2: iExists []; iSteps.
-    rewrite big_sepL2_nil_inv_r. iDestruct "H2" as "->"; iSteps. }
-  iSplit.
-  + iSteps as (l v) "Hl Hv". rewrite IH. 
-    iDestruct "Hv" as (ls) "[Hv Hls]".
-    iExists (l :: ls); iSteps.
-  + iStep 2 as (ls) "Hv Hls".
-    destruct ls as [|l ls]; simpl in *; auto.
-    iExists l. iDestruct "Hv" as "[-> Hv]".
-    iDestruct "Hv" as (v') "[Hl Hv']". iSteps.
-    rewrite IH. iSteps.
-Qed.
+Definition is_data_list v ds : iProp Σ := 
+  ∃ (ls: list loc),
+    nodes v ls ∗ [∗ list] i ↦ l ; d ∈ ls ; ds, (l +ₗ -1) ↦ d.
 
 (* --------------------- Functions on lists  ---------------------- *)
 
@@ -54,7 +40,7 @@ Definition replace_at : val :=
   λ: "v" "n" "a",
     match: get_pos "n" "v" with
       NONE     => #()
-    | SOME "l" => ("l" +ₗ #1) <- "a"
+    | SOME "l" => ("l" +ₗ #-1) <- "a"
     end.
 
 (* ---------------------   Verifying Specs  ----------------------- *)
@@ -97,12 +83,12 @@ Proof.
 Qed.
 
 Lemma replace_at_spec n v ds d :
-  {{{ is_list v ds }}}
+  {{{ is_data_list v ds }}}
     replace_at v #n d
-  {{{ RET #(); is_list v (<[n := d]> ds) }}}.
+  {{{ RET #(); is_data_list v (<[n := d]> ds) }}}.
 Proof.
-  iStep 2 as (Φ) "H". rewrite !is_list_equiv.
-  iRevert "H". iSteps as "Hl Hld HΦ"; iModIntro.
+  iStep 2 as (Φ l') "H Hld". unfold is_data_list.
+  iRevert "H". iSteps as "Hl HΦ"; iModIntro.
   iDestruct (big_sepL2_length with "Hld") as %Hlen.
   wp_apply (get_pos_spec with "[$Hl]") as "Hnodes".
   apply (parallel_lookup n) in Hlen as [(l&d'&Hl&Hd)|[Hl Hd]]; rewrite Hl.
