@@ -9,7 +9,7 @@ Notation tree_insert k a t :=
 
 Notation tree_insert' k a t :=
   (tree.insert (λ '(x, _) '(y, _), bool_decide (x < y) ) (k, a) t).
-  
+
 Notation tree_locate k l Γ t :=
   (tree.locate (λ '(x, _) '(y, _), bool_decide (x < y)) (k, l) Γ t).
 
@@ -62,12 +62,11 @@ Qed.
 
 
 
-
 Definition BST_nat := tree.BST nat (fun x y => bool_decide(x < y)).
 
 Definition BST (l: loc)(t: tree.t (nat * loc)) : iProp Σ :=
   intrusive_tree l (tree.map snd t)
-∗ ⌜ BST_nat (tree.map fst t)⌝
+∗ ⌜ BST_nat (tree.map fst t) ⌝
 ∗ [∗ list] kl ∈ tree.inorder t, (kl.2 +ₗ 2) ↦ #(kl.1: nat).
 
 (* Map that assigns a location to every key *)
@@ -125,6 +124,14 @@ Proof.
   intros Hctx. induction Hctx in t |-*; simpl; auto.
   all: intros H%IHHctx; now inversion H.
 Qed.
+
+Fact Intrusive_Map_empty l :
+  intrusive_tree l tree.Leaf ⊢ is_Intrusive_Map l ∅.
+Proof.
+  iStep. iExists tree.Leaf; iSteps.
+  iPureIntro; constructor.
+Qed.
+
 
 (* ----------------------- Partial BST ---------------------------- *)
 
@@ -196,6 +203,7 @@ Definition insert : val :=
     SOME "node"
   end.
 
+
 (* -------------- Verification of the Specifications -------------- *)
 
 Lemma new_spec l v :
@@ -254,22 +262,25 @@ Definition option_loc_to_val (v: option loc) : val :=
   | Some l => SOMEV #l
   end.
 
-  
 (*  This spec shows that if insert encounters a node that already has [k]
     stored in it, it will replace that node with the new one. *)
-Lemma insert_spec (l new: loc) (k: nat) t :
+Lemma insert_spec (l new: loc) (k: nat) t {Γ' t'} :
+  tree_locate k new id t = (Γ', t') ->
   {{{ new ↦∗ [ NONEV; NONEV; #k] ∗ BST l t }}}
     insert #l #new
   {{{ ml, RET (option_loc_to_val ml);
     BST l (tree_insert' k new t) ∗
-    if ml is Some l' then ∃ w0 w1, l' ↦∗ [ w0; w1; #k]
-    else True
+    match t' with
+    | tree.Leaf            => ⌜ ml = None ⌝
+    | tree.Node (_,l') _ _ => ⌜ ml = Some l' ⌝
+                            ∗ ∃ w0 w1, l' ↦∗ [ w0; w1; #k]
+    end
   }}}.
 Proof.
+  intros H'.
   iIntros (Φ) "[Hnew Ht] HΦ".
   rewrite unfold_array; simpl.
   iDestruct "Hnew" as "(Hnew0 & Hnew1 & ?)"; iSteps as "HΦ Hnew2"; iModIntro.
-  destruct (tree_locate k new id t) as [Γ' t'] eqn:H'.
   specialize (tree.insert_via_locate _ _ _ _ _ H') as H.
   iAssert (⌜ BST_nat (tree.map fst t) ⌝)%I as "%Hbst".
   { iDestruct "Ht" as "[_ [%Hbst _]]"; done. }
@@ -311,23 +322,104 @@ Proof.
     apply bool_decide_eq_false in H2; lia. }
 Qed.
 
-Lemma insert_spec_Map (l new: loc) (k: nat) (m: gmap nat loc) :
+Fact tuple_in_to_set (x:nat) (y:loc) t :
+  (x, y) ∈ tree.to_set t -> x ∈ tree.to_set (tree.map fst t).
+Proof.
+  induction t; set_solver.
+Qed.
+
+Fact in_inorder_in_set x (t: tree.t (nat * loc)) :
+  x ∈ (tree.inorder t).*1 -> x ∈ tree.to_set (tree.map fst t).
+Proof.
+  induction t; set_solver.
+Qed.
+
+Lemma tree_locate_lookup k s Γ t loc :
+  BST_nat (tree.map fst t) ->
+  tree_locate k s Γ t = loc ->
+  match loc with
+  | (Γ', tree.Leaf)             => to_map t !! k = None
+  | (Γ', tree.Node (_, l') _ _) => to_map t !! k = Some l'
+  end.
+Proof.
+  intros Hbst <-.
+  induction t as [| [k' l'] t1 IHt1 t2 IHt2] in k, s, Γ, Hbst |-*.
+  { apply lookup_empty. }
+  simpl. repeat case_bool_decide.
+  - clear IHt2.
+    inversion Hbst; subst.
+    specialize (IHt1 k s (λ h, Γ (tree.Node (k',l') h t2))).
+    destruct (tree_locate k s (λ h, Γ (tree.Node (k',l') h t2)) t1) as [Γ' t'].
+    assert (to_map t1 ##ₘ to_map t2) as disj.
+    { apply map_disjoint_spec. intros i p p' Hi Hj.
+      apply elem_of_list_to_map_2, tree.In_inorder_set, 
+            tuple_in_to_set in Hi, Hj.
+      apply H5 in Hi. apply H6 in Hj.
+      apply bool_decide_eq_true in Hi, Hj. lia.
+    }
+    destruct t' as [|[? l'']].
+    + unfold to_map. simpl. rewrite list_to_map_app.
+      apply lookup_insert_None. split; [|lia].
+      rewrite lookup_union IHt1; auto.
+      enough (to_map t2 !! k = None) as H2' by (now rewrite H2').
+      apply not_elem_of_list_to_map.
+      intros Hk%in_inorder_in_set%H6%bool_decide_eq_true. lia.
+    + unfold to_map. simpl. rewrite list_to_map_app.
+      apply lookup_insert_Some; right. split; [lia|].
+      assert (to_map t2 !! k = None) as H1.
+      { eapply map_disjoint_Some_r; eauto. }
+      rewrite lookup_union IHt1; auto.
+      now rewrite H1.
+  - clear IHt1.
+    inversion Hbst; subst.
+    specialize (IHt2 k s (λ h, Γ (tree.Node (k',l') t1 h))).
+    destruct (tree_locate k s (λ h, Γ (tree.Node (k',l') t1 h)) t2) as [Γ' t'].
+    assert (to_map t1 ##ₘ to_map t2) as disj.
+    { apply map_disjoint_spec. intros i p p' Hi Hj.
+      apply elem_of_list_to_map_2, tree.In_inorder_set, 
+            tuple_in_to_set in Hi, Hj.
+      apply H6 in Hi. apply H7 in Hj.
+      apply bool_decide_eq_true in Hi, Hj. lia.
+    }
+    destruct t' as [|[? l'']].
+    + unfold to_map. simpl. rewrite list_to_map_app.
+      apply lookup_insert_None. split; [|lia].
+      rewrite lookup_union IHt2; auto.
+      enough (to_map t1 !! k = None) as H1' by (now rewrite H1').
+      apply not_elem_of_list_to_map.
+      intros Hk%in_inorder_in_set%H6%bool_decide_eq_true. lia.
+    + unfold to_map. simpl. rewrite list_to_map_app.
+      apply lookup_insert_Some; right. split; [lia|].
+      assert (to_map t1 !! k = None) as H1.
+      { eapply map_disjoint_Some_r; eauto. }
+      rewrite lookup_union IHt2; auto.
+      now rewrite H1.
+  - assert (k' = k) as -> by lia.
+    apply lookup_insert.
+Qed.
+
+Lemma insert_spec_Intrusive_Map (l new: loc) (k: nat) (m: gmap nat loc) :
   {{{ new ↦∗ [ NONEV; NONEV; #k] ∗ is_Intrusive_Map l m }}}
     insert #l #new
   {{{ ml, RET (option_loc_to_val ml); 
     is_Intrusive_Map l ( <[k := new]> m ) ∗
-    if ml is Some l' 
-    then ∃ w0 w1, l' ↦∗ [ w0; w1; #k]
-    else True
+    if m !! k is Some l'
+    then ⌜ ml = Some l' ⌝ ∗ ∃ w0 w1, l' ↦∗ [ w0; w1; #k]
+    else ⌜ ml = None ⌝
   }}}.
 Proof.
   iIntros (Φ) "[Hnew Hmap] HΦ".
   iDestruct "Hmap" as (t) "[Hbst %Hmap]".
   iAssert (⌜ BST_nat (tree.map fst t) ⌝)%I as %Hbst.
   { iDestruct "Hbst" as "[_ [%H' _]]". done. }
-  iApply (insert_spec with "[$Hnew $Hbst]").
-  iSteps. iPureIntro. clear H.
+  destruct (tree_locate k new id t) as [t' l'] eqn:H'.
+  iApply (insert_spec with "[$Hnew $Hbst]"); eauto.
+  iSteps.
+  2: { apply tree_locate_lookup in H'; auto.
+       destruct l' as [|[k_ l']]; rewrite H'; iFrame. }
+  iPureIntro. clear H.
   rewrite -tree.rec_insert_eq_insert.
+  clear H'.
   induction t as [| [k' v'] t1 IHt1 t2 IHt2]; first reflexivity; inversion Hbst; simplify_eq/=.
   unfold to_map in *. simpl.
   rewrite list_to_map_app.
@@ -341,13 +433,15 @@ Proof.
     + rewrite insert_commute; try lia. reflexivity.
     + apply not_elem_of_list_to_map_1.
       rewrite -tree.inorder_map. intros Hk%tree.In_inorder_set.
-      naive_solver lia.
+      apply H4, bool_decide_eq_true in Hk. lia.
   - assert (k = k') as -> by lia.
     rewrite insert_insert list_to_map_app. reflexivity.
 Qed.
 
+
+
 End Tree.
 End Tree.
 
-Global Opaque Tree.pred' Tree.pred
+Global Opaque Tree.pred' Tree.pred Tree.is_Intrusive_Map
               Tree.new Tree.insert Tree.locate.

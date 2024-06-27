@@ -37,7 +37,7 @@ Definition get_pos : val :=
           end.
 
 Definition replace_at : val :=
-  λ: "v" "n" "a",
+  λ: "n" "v" "a",
     match: get_pos "n" "v" with
       NONE     => #()
     | SOME "l" => ("l" +ₗ #-1) <- "a"
@@ -84,7 +84,7 @@ Qed.
 
 Lemma replace_at_spec n v ds d :
   {{{ is_data_list v ds }}}
-    replace_at v #n d
+    replace_at #n v d
   {{{ RET #(); is_data_list v (<[n := d]> ds) }}}.
 Proof.
   iStep 2 as (Φ l') "H Hld". unfold is_data_list.

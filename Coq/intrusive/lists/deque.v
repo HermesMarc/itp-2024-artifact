@@ -13,15 +13,18 @@ Section Deque.
 (* --------------------- Functions on deques ---------------------- *)
 
 Definition new : val := 
-  λ: <>, let: "l" := AllocN #2 NONE in
-    DCycle.new "l";; "l".
+  λ: <>,
+    let: "new" := AllocN #2 NONE in
+    DCycle.new "new";; "new".
 
 Definition push_front : val :=
-  λ: "x" "l", let: "l_x" := AllocN #3 "x" in
+  λ: "x" "l",
+    let: "l_x" := AllocN #3 "x" in
     DCycle.insert_0 "l" ("l_x" +ₗ #1).
 
 Definition push_back : val :=
-  λ: "x" "l", let: "l_x" := AllocN #3 "x" in
+  λ: "x" "l",
+    let: "l_x" := AllocN #3 "x" in
     DCycle.insert_1 "l" ("l_x" +ₗ #1).
 
 Definition pop_front : val :=

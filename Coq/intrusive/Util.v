@@ -168,8 +168,8 @@ Section BST.
   | BST_Leaf : BST (@Leaf K)
   | BST_Node (x: K) (l r: t K) :
       BST l → BST r →
-      (∀ y, y ∈ to_set l → p y x) →
-      (∀ y, y ∈ to_set r → p x y) →
+      (∀ y, y ∈ to_set l → p y x = true) →
+      (∀ y, y ∈ to_set r → p x y = true) →
       BST (@Node K x l r).
 
   (* ------------------- Contexts  ----------------- *)
@@ -232,7 +232,7 @@ Section BST.
 
   Lemma BST_sidecondition_equiv x l r :
     BST l /\ BST r ->
-   ((∀ y, y ∈ to_set l → p y x) /\ (∀ y, y ∈ to_set r → p x y)
+   ((∀ y, y ∈ to_set l → p y x = true) /\ (∀ y, y ∈ to_set r → p x y = true)
     <-> BST (Node x l r)).
   Proof. 
     intros [Hl Hr]; split.
@@ -270,7 +270,7 @@ Section BST.
   Qed.
 
   Lemma BST_ctx_ht C k t :
-    (∀ y, y ∈ C → p y k) ->
+    (∀ y, y ∈ C → p y k = true) ->
     BST (Node k Leaf t) ->
     BST_ctx (λ h, Node k h t) C ({[k]} ∪ C ∪ to_set t).
   Proof.
@@ -280,7 +280,7 @@ Section BST.
   Qed.
 
   Lemma BST_ctx_th C k t :
-    (∀ y, y ∈ C → p k y) ->
+    (∀ y, y ∈ C → p k y = true) ->
     BST (Node k t Leaf) ->
     BST_ctx (λ h, Node k t h) C ({[k]} ∪ C ∪ to_set t).
   Proof.
